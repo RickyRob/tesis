@@ -117,3 +117,63 @@ def grafico1(d1):
     fig.update_layout(paper_bgcolor = "lavender", font = {'color': "darkblue", 'family': "Arial"})
 
     fig.show()
+
+def voldia(df,ticker,df2):
+    f = lambda x: list(x.index.date)
+    l1 = f(df)
+    l2 = list(map(lambda x : x.day, l1))
+    df['day'] = l2
+    r = df['Adj Close'].diff()/df['Adj Close']
+    df['rend'] = r
+    #df['Vol'] = np.var(df['rend'])
+    print(df.head())
+    #print(np.var(df['rend']))
+    #agru = list(df.groupby('day'))
+    #vola = map(lambda x : np.var(x['rend']),agru)
+    #print(list(vola).reset_index)
+
+    g = pd.DataFrame(list(df.groupby('day')))
+    #pl1,pl2,pl3,pl4,pl5 = df.groupby('day').plot(y='Adj Close',title=f'Precios por minuto de: {ticker}')
+    #gra = df.groupby('day').plot(y='Adj Close',title=f'Precios por minuto de: {ticker}')
+    #vol1,vol2,vol3,vol4,vol5 = df.groupby('day').plot(y='rend',title=f'Rendimientos por minuto de: {ticker}')
+    print('################')
+    fig, (ax3,ax4,ax5) = plt.subplots(3, 1)
+    fig.suptitle(f'Precios por minuto de: {ticker}')
+    pl1 = g[1][0]
+    pl2 = g[1][1]
+    pl3 = g[1][2]
+    pl4 = g[1][3]
+    pl5 = g[1][4]
+    #ax1.plot(pl1['Adj Close'])
+    #ax2.plot(pl2['Adj Close'])
+    ax3.plot(pl3['Adj Close'])
+    ax4.plot(pl4['Adj Close'])
+    ax5.plot(pl5['Adj Close'])
+    #########print('################')
+    fig2, (a3,a4,a5) = plt.subplots(3, 1)
+    fig2.suptitle(f'Rendimientos por minuto de: {ticker}')
+    #a1.plot(pl1['rend'])
+    #a2.plot(pl2['rend'])
+    a3.plot(pl3['rend'])
+    a4.plot(pl4['rend'])
+    a5.plot(pl5['rend'])
+    ###########################
+    var1 = np.sqrt(np.var(pl1['rend']))*100
+    var2 = np.sqrt(np.var(pl2['rend']))*100
+    var3 = np.sqrt(np.var(pl3['rend']))*100
+    var4 = np.sqrt(np.var(pl4['rend']))*100
+    var5 = np.sqrt(np.var(pl5['rend']))*100
+    des = [var1,var2,var3,var4,var5]
+    fig3, (d1,d2) = plt.subplots(2, 1)
+    fig3.suptitle(f'{ticker}')
+    d1.plot(des,marker='o')
+    d1.set_ylabel('Volatilidad diaria %')
+    d2.plot(df2['Per'], marker='o')
+    d2.set_ylabel('Cierre - Apertura $')
+
+
+    
+    plt.show()
+    #return vol
+
+
