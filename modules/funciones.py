@@ -5,6 +5,10 @@ import xlwings as xw
 import matplotlib.pyplot as plt
 from datetime import timedelta
 import plotly.graph_objects as go
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn import preprocessing
+
 
 # Funcion de bienvenida
 
@@ -171,9 +175,101 @@ def voldia(df,ticker,df2):
     d2.plot(df2['Per'], marker='o')
     d2.set_ylabel('Cierre - Apertura $')
 
+    # Sacando los minimos y maximos del rendimiento diario
+    min1 = np.min(np.min(pl1['rend']))
+    max1 = np.min(np.max(pl1['rend']))
+    min2 = np.min(np.min(pl2['rend']))
+    max2 = np.min(np.max(pl2['rend']))
+    min3 = np.min(np.min(pl3['rend']))
+    max3 = np.max(np.max(pl3['rend']))
+    min4 = np.max(np.min(pl4['rend']))
+    max4 = np.max(np.max(pl4['rend']))
+    min5 = np.max(np.min(pl5['rend']))
+    max5 = np.max(np.max(pl5['rend']))
 
+    # Creando el df de salida para las redes neuronales
+
+    df3 = df2.copy()
+    df3.drop(['Cierre d-1','Apertura','Per'],axis=1, inplace=True)
+    df3.drop([0],axis=0,inplace=True)
+    minimos = [min1,min2,min3,min4,min5]
+    maximos = [max1,max2,max3,max4,max5]
+    df3['renMin'] = minimos
+    df3['renMax'] = maximos
+    df3['volProm'] = des
+
+    print(df3.head())
+    
     
     plt.show()
-    #return vol
+    return df3
 
+def red(df3):
+    print("###############################")
+    print("###############################")
+    print("###############################")
+    print('Deseas hacer una predicción de la volatilidad???')
+    pre = input('Respuesta Y/N: ').upper()
+    if pre == 'Y':
+        promMin = df3['renMin'].mean()
+        promMax = df3['renMax'].mean()
+        #features = ['Diff','renMin','renMax']
+        features = ['Diff','renMax']
+        target = ['volProm']
+        x = df3[features]
+        y = df3[target]
+        X_train, X_test, Y_train, Y_test = train_test_split(x, y, test_size=0.2, random_state=0)
+        scale = preprocessing.StandardScaler()
+        scale.fit(X_train)
+        X_train = scale.transform(X_train)
+        regressor = LinearRegression()
+        regressor.fit(X_train, Y_train)
+        X_test = scale.transform(X_test)
+        y_predict = regressor.predict(X_test)
+        #y_result = y_predict - Y_test
+        #s = regressor.score(X_test, Y_test)
+        #print(y_result)
+        #print(y_predict.shape)
+        #print(s)
+        #print(y_predict)
+        varia = float(input('Valor de la variación: '))
+        #varia = float(varia)
+        prueba = [[varia,promMax]]
+        prueba = scale.transform(prueba)
+        prediccion = regressor.predict(prueba)
+        prediccion = prediccion[0][0]
+        print(f'Tu predicción es: {prediccion}')
+        #r = regressor.predict(3,promMin,promMax)
+        #print(r)
+    else:
+        print('No has querido predecir')
+    return prediccion
+    
+
+## GRAFICA DE IMPULSO
+def graficofinal(pr):
+    r = pr
+    fig = go.Figure(go.Indicator(
+    mode = "gauge+number+delta",
+    value = pr,
+    domain = {'x': [0, 1], 'y': [0, 1]},
+    title = {'text': "Impulso", 'font': {'size': 30}},
+    delta = {'reference': r, 'increasing': {'color': "RebeccaPurple"}},
+    gauge = {
+        'axis': {'range': [-1, 1], 'tickwidth': 5, 'tickcolor': "darkblue",'ticklen':5},
+        'bar': {'color': "darkblue"},
+        'bgcolor': "white",
+        'borderwidth': 2,
+        'bordercolor': "gray",
+        'steps': [
+            {'range': [-1, 0], 'color': 'cyan'},
+            {'range': [0, 0.75], 'color': 'royalblue'}],
+        'threshold': {
+            'line': {'color': "red", 'width': 4},
+            'thickness': 0.75,
+            'value': pr}}))
+
+    fig.update_layout(paper_bgcolor = "lavender", font = {'color': "darkblue", 'family': "Arial"})
+
+    fig.show()
 
